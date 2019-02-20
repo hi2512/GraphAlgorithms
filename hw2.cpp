@@ -10,21 +10,35 @@
 using namespace std;
 
 
+struct PageNode {
+	int label;
+	double curVal;
+	double prevVal;
+};
+
+void doPageRank(vector<PageNode> pn) {
+
+}
+
+vector<PageNode>* createPageNodes(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai) {
+	vector<PageNode> * res = new vector<PageNode>();
+	for(int i = 1; i <= rp.size(); i++) {
+		res->push_back(PageNode{i, 1.0 / rp.size(), -1.0});
+	}
+	return res;
+}
+
 void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai) {
 	std::vector<tuple<int, int, int>> res;
 	string line;
 	char fline[50];
-	char * tok;
 	int nodeFrom, nodeTo, weight;
 	while(getline(dimacfile, line)) {
 		strcpy(fline, line.c_str());
 		strtok(fline, " ");
-		tok = strtok(NULL, " ");
-		nodeFrom = atoi(tok);
-		tok = strtok(NULL, " ");
-		nodeTo = atoi(tok);
-		tok = strtok(NULL, " ");
-		weight = atoi(tok);
+		nodeFrom = atoi(strtok(NULL, " "));
+		nodeTo = atoi(strtok(NULL, " "));
+		weight = atoi(strtok(NULL, " "));
 		res.push_back(tuple<int, int, int>(nodeFrom, nodeTo, weight));
 	}
 	//arent they already sorted though?
@@ -46,7 +60,7 @@ void csrToDimacs(ofstream & outfile, std::vector<int> & rp, std::vector<int> & c
 	int rIndex = 0;
 	for(int i = 0; i < ci.size(); i++) {
 		outfile << "a ";
-		if((i + 1) > rp.at(rIndex)) {
+		if((rIndex + 1 < rp.size()) && (rp.at(rIndex + 1) - 1 == i)) {
 			rIndex++;
 		}
 		outfile << rIndex + 1 << " ";
