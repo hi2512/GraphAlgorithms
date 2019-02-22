@@ -6,38 +6,122 @@
 #include <vector>
 #include <tuple>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
 
 struct PageNode {
+	int number;
 	int label;
+	int outLinks;
 	double curVal;
 	double prevVal;
-	vector<tuple<PageNode*, int>>*  connections;
 };
 
-void doPageRank(vector<PageNode> pn) {
-
-}
-/*
-vector<PageNode>* createPageNodes(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai) {
-	vector<PageNode> * res = new vector<PageNode>();
-	for(int i = 1; i <= rp.size(); i++) {
-		res->push_back(PageNode{i, 1.0 / rp.size(), -1.0, new vector<PageNode*, int>()});
-	}
-
-	int rIndex = 0;
-	for(int i = 0; i < ci.size(); i++) {
-		if((rIndex + 1 < rp.size()) && (rp.at(rIndex + 1) - 1 == i)) {
-			rIndex++;
+bool terminateThreshold(vector<PageNode> pn, double threshold) {
+	for(auto it = pn.begin(); it != pn.end(); ++it) {
+		PageNode cur = *it;
+		if(abs(abs(cur.curVal) - abs(cur.prevVal)) > threshold) {
+			return false;
 		}
-		res->at(rIndex - 1).connections->push_back(res->at());
+	}
+	return true;
+}
+
+void printPageVals(vector<PageNode> & pn) {
+	double sum = 0;
+	for(PageNode n : pn) {
+		cout << "Node number: " << n.number << " Label: " << n.label << " Out Links: " << n.outLinks << endl;
+		cout << "Cur Val: " << n.curVal << " Prev Val: " << n.prevVal << endl;
+		sum += n.curVal;
+	}
+	cout << "SUM: " << sum << endl;
+}
+
+void doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
+	vector<PageNode> pns;
+	for(int i = 1; i <= nodeNum; i++) {
+		pns.push_back(PageNode{i, i, 0, 0.0, 1.0 / nodeLabels.size()});
+	}
+	//set outlinks
+	for(int i = 0; i < rp.size(); i++) {
+		if(i == (rp.size() - 1)) {
+			pns.at(nodeLabels.at(i) - 1).outLinks = ci.size() + 1 - rp.at(i);
+		} else {
+			pns.at(nodeLabels.at(i) - 1).outLinks = rp.at(i + 1) - rp.at(i);
+		}
 	}
 
-	return res;
+	//do inital iteration
+	for(PageNode& n : pns) {
+		//check for nodes going to this one
+		double inSum = 0;
+		int rowCount = 0;
+		for(int i = 0; i < ci.size(); i++) {
+			if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
+				rowCount++;
+			}
+			if(ci.at(i) == n.number) {
+				cout << "insum for "   << n.label << ": " << pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
+				cout << " val: " << pns.at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns.at(nodeLabels.at(rowCount) - 1).outLinks << endl;
+				inSum += pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks;
+			}
+		}
+		n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
+		//n.curVal = inSum;
+	}
+	/*
+	printPageVals(pns);
+	for(PageNode& n : pns) {
+			n.prevVal = n.curVal;
+	}
+	for(PageNode& n : pns) {
+		//check for nodes going to this one
+		double inSum = 0;
+		int rowCount = 0;
+		for(int i = 0; i < ci.size(); i++) {
+			if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
+				rowCount++;
+			}
+			if(ci.at(i) == n.number) {
+				cout << "insum for "   << n.label << ": " << pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
+				cout << " val: " << pns.at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns.at(nodeLabels.at(rowCount) - 1).outLinks << endl;
+				inSum += pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks;
+			}
+		}
+		n.curVal = ((1.0 - damp) / rp.size()) + (inSum * damp);
+		//n.curVal = inSum;
+	}
+	*/
+	while(!terminateThreshold(pns, threshold)) {
+		for(PageNode& n : pns) {
+			n.prevVal = n.curVal;
+		}
+	for(PageNode& n : pns) {
+		//check for nodes going to this one
+		double inSum = 0;
+		int rowCount = 0;
+		for(int i = 0; i < ci.size(); i++) {
+			if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
+				rowCount++;
+			}
+			if(ci.at(i) == n.number) {
+				cout << "insum for "   << n.label << ": " << pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
+				cout << " val: " << pns.at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns.at(nodeLabels.at(rowCount) - 1).outLinks << endl;
+				inSum += pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks;
+			}
+		}
+		n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
+		//n.curVal = inSum;
+	}
+	}
+	cout << "FINAL" << endl;
+	printPageVals(pns);
+
+
 }
-*/
+
 void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> & nodeLabels) {
 	std::vector<tuple<int, int, int>> res;
 	string line;
@@ -68,8 +152,8 @@ void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> &
 	}
 }
 
-void csrToDimacs(ofstream & outfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> & nodeLabels) {
-	outfile << "p sp " << rp.size() << " " << ci.size() << endl;
+void csrToDimacs(ofstream & outfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> & nodeLabels, int nodeNum) {
+	outfile << "p sp " << nodeNum << " " << ci.size() << endl;
 	int rIndex = 0;
 	for(int i = 0; i < ci.size(); i++) {
 		outfile << "a ";
@@ -126,8 +210,10 @@ int main(int argc, char * argv[], char * env[]) {
 
 	ofstream outfile;
 	outfile.open("1.dimacs");
-	csrToDimacs(outfile, rp, ci, ai, nodeLabels);
+	csrToDimacs(outfile, rp, ci, ai, nodeLabels, nodes);
 	outfile.close();
+
+	doPageRank(rp, ci, ai, nodeLabels, nodes, 0.85, 0.001);
 
 	return 0;
 }
