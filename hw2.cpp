@@ -19,6 +19,16 @@ struct PageNode {
 	double prevVal;
 };
 
+void scaleValues(vector<PageNode> * pn) {
+	double sum = 0;
+	for(PageNode n : *pn) {
+		sum += n.curVal;
+	}
+	for(PageNode& n : *pn) {
+		n.curVal /= sum;
+	}
+}
+
 bool terminateThreshold(vector<PageNode>* pn, double threshold) {
 	for(auto it = pn->begin(); it != pn->end(); ++it) {
 		PageNode cur = *it;
@@ -39,7 +49,7 @@ void printPageVals(vector<PageNode>* pn) {
 	cout << "SUM: " << sum << endl;
 }
 
-void doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
+vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
 	vector<PageNode>* pns = new vector<PageNode>();
 	for(int i = 1; i <= nodeNum; i++) {
 		pns->push_back(PageNode{i, i, 0, 0.0, 1.0 / nodeLabels.size()});
@@ -66,17 +76,19 @@ void doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> &
 					rowCount++;
 				}
 				if(ci.at(i) == n.number) {
-					cout << "insum for "   << n.label << ": " << pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
-					cout << " val: " << pns->at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns->at(nodeLabels.at(rowCount) - 1).outLinks << endl;
+					//cout << "insum for "   << n.label << ": " << pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
+					//cout << " val: " << pns->at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns->at(nodeLabels.at(rowCount) - 1).outLinks << endl;
 					inSum += pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks;
 				}
 			}
 			n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
 		}
 	} while(!terminateThreshold(pns, threshold));
-	cout << "FINAL" << endl;
+	//cout << "FINAL" << endl;
+	//printPageVals(pns);
+	scaleValues(pns);
+	cout << "After scale" << endl;
 	printPageVals(pns);
-
 
 }
 
@@ -171,7 +183,7 @@ int main(int argc, char * argv[], char * env[]) {
 	csrToDimacs(outfile, rp, ci, ai, nodeLabels, nodes);
 	outfile.close();
 
-	doPageRank(rp, ci, ai, nodeLabels, nodes, 0.85, 0.001);
+	delete(doPageRank(rp, ci, ai, nodeLabels, nodes, 0.85, 0.001));
 
 	return 0;
 }
