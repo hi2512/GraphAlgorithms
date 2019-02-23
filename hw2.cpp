@@ -156,34 +156,34 @@ int main(int argc, char * argv[], char * env[]) {
 	tok = strtok(NULL, " ");
 	int edges = atoi(tok);
 
-	vector<int> rp;
-	vector<int> ci;
-	vector<int> ai;
-	vector<int> nodeLabels;
-	dimacsToCSR(dimacfile, rp, ci, ai, nodeLabels);
-	for(auto i : rp) {
+	vector<int>* rp = new vector<int>();
+	vector<int>* ci = new vector<int>();
+	vector<int>* ai = new vector<int>();
+	vector<int>* nodeLabels = new vector<int>();
+	dimacsToCSR(dimacfile, *rp, *ci, *ai, *nodeLabels);
+	for(auto i : *rp) {
 		cout << i << " ";
 	}
 	cout << endl;
-	for(auto i : ci) {
+	for(auto i : *ci) {
 		cout << i << " ";
 	}
 	cout << endl;
-	for(auto i : ai) {
+	for(auto i : *ai) {
 		cout << i << " ";
 	}
 	cout << endl;
-	for(auto i : nodeLabels) {
+	for(auto i : *nodeLabels) {
 		cout << i << " ";
 	}
 	cout << endl;
 
 	ofstream outfile;
 	outfile.open("1.dimacs");
-	csrToDimacs(outfile, rp, ci, ai, nodeLabels, nodes);
+	csrToDimacs(outfile, *rp, *ci, *ai, *nodeLabels, nodes);
 	outfile.close();
 
-	delete(doPageRank(rp, ci, ai, nodeLabels, nodes, 0.85, 0.001));
+	delete(doPageRank(*rp, *ci, *ai, *nodeLabels, nodes, 0.85, 0.001));
 
 	return 0;
 }
