@@ -53,69 +53,27 @@ void doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> &
 		}
 	}
 
-	//do inital iteration
-	for(PageNode& n : pns) {
-		//check for nodes going to this one
-		double inSum = 0;
-		int rowCount = 0;
-		for(int i = 0; i < ci.size(); i++) {
-			if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
-				rowCount++;
-			}
-			if(ci.at(i) == n.number) {
-				cout << "insum for "   << n.label << ": " << pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
-				cout << " val: " << pns.at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns.at(nodeLabels.at(rowCount) - 1).outLinks << endl;
-				inSum += pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks;
-			}
-		}
-		n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
-		//n.curVal = inSum;
-	}
-	/*
-	printPageVals(pns);
-	for(PageNode& n : pns) {
-			n.prevVal = n.curVal;
-	}
-	for(PageNode& n : pns) {
-		//check for nodes going to this one
-		double inSum = 0;
-		int rowCount = 0;
-		for(int i = 0; i < ci.size(); i++) {
-			if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
-				rowCount++;
-			}
-			if(ci.at(i) == n.number) {
-				cout << "insum for "   << n.label << ": " << pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
-				cout << " val: " << pns.at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns.at(nodeLabels.at(rowCount) - 1).outLinks << endl;
-				inSum += pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks;
-			}
-		}
-		n.curVal = ((1.0 - damp) / rp.size()) + (inSum * damp);
-		//n.curVal = inSum;
-	}
-	*/
-	while(!terminateThreshold(pns, threshold)) {
+	do {
 		for(PageNode& n : pns) {
 			n.prevVal = n.curVal;
 		}
-	for(PageNode& n : pns) {
-		//check for nodes going to this one
-		double inSum = 0;
-		int rowCount = 0;
-		for(int i = 0; i < ci.size(); i++) {
-			if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
-				rowCount++;
+		for(PageNode& n : pns) {
+			//check for nodes going to this one
+			double inSum = 0;
+			int rowCount = 0;
+			for(int i = 0; i < ci.size(); i++) {
+				if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
+					rowCount++;
+				}
+				if(ci.at(i) == n.number) {
+					cout << "insum for "   << n.label << ": " << pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
+					cout << " val: " << pns.at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns.at(nodeLabels.at(rowCount) - 1).outLinks << endl;
+					inSum += pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks;
+				}
 			}
-			if(ci.at(i) == n.number) {
-				cout << "insum for "   << n.label << ": " << pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
-				cout << " val: " << pns.at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns.at(nodeLabels.at(rowCount) - 1).outLinks << endl;
-				inSum += pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks;
-			}
+			n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
 		}
-		n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
-		//n.curVal = inSum;
-	}
-	}
+	} while(!terminateThreshold(pns, threshold));
 	cout << "FINAL" << endl;
 	printPageVals(pns);
 
