@@ -42,8 +42,9 @@ bool terminateThreshold(vector<PageNode>* pn, double threshold) {
 void printPageVals(vector<PageNode>* pn) {
 	double sum = 0;
 	for(PageNode n : *pn) {
-		cout << "Node number: " << n.number << " Label: " << n.label << " Out Links: " << n.outLinks << endl;
-		cout << "Cur Val: " << n.curVal << " Prev Val: " << n.prevVal << endl;
+		//cout << "Node number: " << n.number << " Label: " << n.label << " Out Links: " << n.outLinks << endl;
+		//cout << "Cur Val: " << n.curVal << " Prev Val: " << n.prevVal << endl;
+		cout << "Node number: " << n.number << " Cur Val: " << n.curVal << endl;
 		sum += n.curVal;
 	}
 	cout << "SUM: " << sum << endl;
@@ -62,7 +63,6 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 			pns->at(nodeLabels.at(i) - 1).outLinks = rp.at(i + 1) - rp.at(i);
 		}
 	}
-
 	do {
 		for(PageNode& n : *pns) {
 			n.prevVal = n.curVal;
@@ -72,6 +72,7 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 			double inSum = 0;
 			int rowCount = 0;
 			for(int i = 0; i < ci.size(); i++) {
+				//cout << rowCount << endl;
 				if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
 					rowCount++;
 				}
@@ -92,8 +93,8 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 
 }
 
-void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> & nodeLabels) {
-	std::vector<tuple<int, int, int>> res;
+void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> & nodeLabels,
+				std::vector<tuple<int, int, int>> & res) {
 	string line;
 	char fline[50];
 	int nodeFrom, nodeTo, weight;
@@ -109,7 +110,7 @@ void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> &
 	sort(res.begin(), res.end(), [](tuple<int, int, int> x, tuple<int, int, int> y) {return get<0>(x) < get<0>(y);});
 	int curNode = 0;
 	for(auto t : res) {
-		cout << get<0>(t) << " " << get<1>(t) << " " << get<2>(t) << endl;
+		//cout << get<0>(t) << " " << get<1>(t) << " " << get<2>(t) << endl;
 		if(!count(nodeLabels.begin(), nodeLabels.end(), get<0>(t))) {
 			nodeLabels.push_back(get<0>(t));
 		}
@@ -160,7 +161,8 @@ int main(int argc, char * argv[], char * env[]) {
 	vector<int>* ci = new vector<int>();
 	vector<int>* ai = new vector<int>();
 	vector<int>* nodeLabels = new vector<int>();
-	dimacsToCSR(dimacfile, *rp, *ci, *ai, *nodeLabels);
+	vector<tuple<int, int, int>>* res = new vector<tuple<int, int, int>>();
+	dimacsToCSR(dimacfile, *rp, *ci, *ai, *nodeLabels, *res);
 	for(auto i : *rp) {
 		cout << i << " ";
 	}
