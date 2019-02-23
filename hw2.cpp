@@ -19,8 +19,8 @@ struct PageNode {
 	double prevVal;
 };
 
-bool terminateThreshold(vector<PageNode> pn, double threshold) {
-	for(auto it = pn.begin(); it != pn.end(); ++it) {
+bool terminateThreshold(vector<PageNode>* pn, double threshold) {
+	for(auto it = pn->begin(); it != pn->end(); ++it) {
 		PageNode cur = *it;
 		if(abs(abs(cur.curVal) - abs(cur.prevVal)) > threshold) {
 			return false;
@@ -29,9 +29,9 @@ bool terminateThreshold(vector<PageNode> pn, double threshold) {
 	return true;
 }
 
-void printPageVals(vector<PageNode> & pn) {
+void printPageVals(vector<PageNode>* pn) {
 	double sum = 0;
-	for(PageNode n : pn) {
+	for(PageNode n : *pn) {
 		cout << "Node number: " << n.number << " Label: " << n.label << " Out Links: " << n.outLinks << endl;
 		cout << "Cur Val: " << n.curVal << " Prev Val: " << n.prevVal << endl;
 		sum += n.curVal;
@@ -40,24 +40,24 @@ void printPageVals(vector<PageNode> & pn) {
 }
 
 void doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
-	vector<PageNode> pns;
+	vector<PageNode>* pns = new vector<PageNode>();
 	for(int i = 1; i <= nodeNum; i++) {
-		pns.push_back(PageNode{i, i, 0, 0.0, 1.0 / nodeLabels.size()});
+		pns->push_back(PageNode{i, i, 0, 0.0, 1.0 / nodeLabels.size()});
 	}
 	//set outlinks
 	for(int i = 0; i < rp.size(); i++) {
 		if(i == (rp.size() - 1)) {
-			pns.at(nodeLabels.at(i) - 1).outLinks = ci.size() + 1 - rp.at(i);
+			pns->at(nodeLabels.at(i) - 1).outLinks = ci.size() + 1 - rp.at(i);
 		} else {
-			pns.at(nodeLabels.at(i) - 1).outLinks = rp.at(i + 1) - rp.at(i);
+			pns->at(nodeLabels.at(i) - 1).outLinks = rp.at(i + 1) - rp.at(i);
 		}
 	}
 
 	do {
-		for(PageNode& n : pns) {
+		for(PageNode& n : *pns) {
 			n.prevVal = n.curVal;
 		}
-		for(PageNode& n : pns) {
+		for(PageNode& n : *pns) {
 			//check for nodes going to this one
 			double inSum = 0;
 			int rowCount = 0;
@@ -66,9 +66,9 @@ void doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> &
 					rowCount++;
 				}
 				if(ci.at(i) == n.number) {
-					cout << "insum for "   << n.label << ": " << pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
-					cout << " val: " << pns.at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns.at(nodeLabels.at(rowCount) - 1).outLinks << endl;
-					inSum += pns.at(nodeLabels.at(rowCount) - 1).prevVal / pns.at(nodeLabels.at(rowCount) - 1).outLinks;
+					cout << "insum for "   << n.label << ": " << pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
+					cout << " val: " << pns->at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns->at(nodeLabels.at(rowCount) - 1).outLinks << endl;
+					inSum += pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks;
 				}
 			}
 			n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
