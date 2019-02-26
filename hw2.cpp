@@ -19,15 +19,18 @@ struct PageNode {
 	double prevVal;
 };
 
-void scaleValues(vector<PageNode> * pn) {
+void scaleValues(vector<PageNode> * pn, double targetScale) {
 	double sum = 0;
 	for(PageNode n : *pn) {
 		sum += n.curVal;
 	}
+	cout << "Sum is " << sum << endl;
 	for(PageNode& n : *pn) {
 		n.curVal /= sum;
+		n.curVal *= targetScale;
 	}
 }
+
 
 bool terminateThreshold(vector<PageNode>* pn, double threshold) {
 	for(auto it = pn->begin(); it != pn->end(); ++it) {
@@ -53,7 +56,7 @@ void printPageVals(vector<PageNode>* pn) {
 vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
 	vector<PageNode>* pns = new vector<PageNode>();
 	for(int i = 1; i <= nodeNum; i++) {
-		pns->push_back(PageNode{i, i, 0, 0.0, 1.0 / nodeLabels.size()});
+		pns->push_back(PageNode{i, i, 0, 1.f, 1.f});
 	}
 	//set outlinks
 	for(int i = 0; i < rp.size(); i++) {
@@ -61,13 +64,16 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 			pns->at(nodeLabels.at(i) - 1).outLinks = ci.size() + 1 - rp.at(i);
 		} else {
 			pns->at(nodeLabels.at(i) - 1).outLinks = rp.at(i + 1) - rp.at(i);
+			//cout << "outlinks: " << pns->at(nodeLabels.at(i) - 1).outLinks << endl;
 		}
 	}
 	do {
+		cout << "Start" << endl;
 		for(PageNode& n : *pns) {
 			n.prevVal = n.curVal;
 		}
 		for(PageNode& n : *pns) {
+			//cout << "At node: " << n.number << endl;
 			//check for nodes going to this one
 			double inSum = 0;
 			int rowCount = 0;
@@ -77,18 +83,20 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 					rowCount++;
 				}
 				if(ci.at(i) == n.number) {
-					//cout << "insum for "   << n.label << ": " << pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
+					//cout << "insum for "   << n.label << ": " << ai.at(i) * pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
 					//cout << " val: " << pns->at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns->at(nodeLabels.at(rowCount) - 1).outLinks << endl;
-					inSum += pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks;
+					inSum += ai.at(i) * pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks;
+					//cout << "inSum for " << n.number << " is " << inSum << endl;
 				}
 			}
 			n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
 		}
+		//scaleValues(pns, (double) nodeNum);
 	} while(!terminateThreshold(pns, threshold));
 	//cout << "FINAL" << endl;
 	//printPageVals(pns);
-	scaleValues(pns);
-	cout << "After scale" << endl;
+	scaleValues(pns, 1.f);
+	//cout << "After scale" << endl;
 	printPageVals(pns);
 
 }
