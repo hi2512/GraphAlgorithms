@@ -24,7 +24,7 @@ void scaleValues(vector<PageNode> * pn, double targetScale) {
 	for(PageNode n : *pn) {
 		sum += n.curVal;
 	}
-	cout << "Sum is " << sum << endl;
+	//cout << "Sum is " << sum << endl;
 	for(PageNode& n : *pn) {
 		n.curVal /= sum;
 		n.curVal *= targetScale;
@@ -81,7 +81,7 @@ vector<PageNode>* doPageRank2(std::vector<int> & rp, std::vector<int> & ci, std:
 				PageNode& fromNode = pns->at(nodeLabels.at(i) - 1);
 				PageNode& toNode =  pns->at(ci.at(ciIndex + j) - 1);
 				//cout << "checking pn fromNode: " << fromNode.number << " to node: " << toNode.number << endl;
-				toNode.curVal += ai.at(i) *
+				toNode.curVal += ai.at(ciIndex + j) *
 					fromNode.prevVal / fromNode.outLinks;
 			}
 		}
