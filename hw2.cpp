@@ -53,6 +53,52 @@ void printPageVals(vector<PageNode>* pn) {
 	cout << "SUM: " << sum << endl;
 }
 
+vector<PageNode>* doPageRank2(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
+	vector<PageNode>* pns = new vector<PageNode>();
+	for(int i = 1; i <= nodeNum; i++) {
+		pns->push_back(PageNode{i, i, 0, 1.f, 1.f});
+	}
+	//set outlinks
+	for(int i = 0; i < rp.size(); i++) {
+		if(i == (rp.size() - 1)) {
+			pns->at(nodeLabels.at(i) - 1).outLinks = ci.size() + 1 - rp.at(i);
+		} else {
+			pns->at(nodeLabels.at(i) - 1).outLinks = rp.at(i + 1) - rp.at(i);
+			//cout << "outlinks: " << pns->at(nodeLabels.at(i) - 1).outLinks << endl;
+		}
+	}
+	do {
+		//cout << "Start" << endl;
+		for(PageNode& n : *pns) {
+			n.prevVal = n.curVal;
+			n.curVal = 0;
+		}
+		for(int i = 0; i < rp.size(); i++) {
+			int ciIndex = rp.at(i) - 1;
+			int linkNum = pns->at(nodeLabels.at(i) - 1).outLinks;
+			//cout << "i: " << i  << " ciIndex: " << ciIndex << " link num: " << linkNum << endl;
+			for(int j = 0; j < linkNum; j++) {
+				PageNode& fromNode = pns->at(nodeLabels.at(i) - 1);
+				PageNode& toNode =  pns->at(ci.at(ciIndex + j) - 1);
+				//cout << "checking pn fromNode: " << fromNode.number << " to node: " << toNode.number << endl;
+				toNode.curVal += ai.at(i) *
+					fromNode.prevVal / fromNode.outLinks;
+			}
+		}
+		for(PageNode& n : *pns) {
+			n.curVal = ((1.0 - damp) / nodeNum) + (n.curVal * damp);
+		}
+		scaleValues(pns, (double) 1.f);
+		//printPageVals(pns);
+	} while(!terminateThreshold(pns, threshold));
+	//cout << "FINAL" << endl;
+	//printPageVals(pns);
+	scaleValues(pns, 1.f);
+	//cout << "After scale" << endl;
+	printPageVals(pns);
+
+}
+
 vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
 	vector<PageNode>* pns = new vector<PageNode>();
 	for(int i = 1; i <= nodeNum; i++) {
@@ -193,7 +239,7 @@ int main(int argc, char * argv[], char * env[]) {
 	csrToDimacs(outfile, *rp, *ci, *ai, *nodeLabels, nodes);
 	outfile.close();
 
-	delete(doPageRank(*rp, *ci, *ai, *nodeLabels, nodes, 0.85, 0.001));
+	delete(doPageRank2(*rp, *ci, *ai, *nodeLabels, nodes, 0.85, 0.001));
 
 	return 0;
 }
