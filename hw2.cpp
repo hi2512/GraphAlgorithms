@@ -96,7 +96,7 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 			n.curVal = ((1.0 - damp) / nodeNum) + (n.curVal * damp);
 		}
 		//scaleValues(pns);
-		printSum(pns);
+		//printSum(pns);
 	} while(!terminateThreshold(pns, threshold));
 	scaleValues(pns);
 	printPageVals(pns);
