@@ -19,7 +19,7 @@ struct PageNode {
 	double prevVal;
 };
 
-void scaleValues(vector<PageNode> * pn, double targetScale) {
+void scaleValues(vector<PageNode> * pn) {
 	double sum = 0;
 	for(PageNode n : *pn) {
 		sum += n.curVal;
@@ -27,7 +27,6 @@ void scaleValues(vector<PageNode> * pn, double targetScale) {
 	//cout << "Sum is " << sum << endl;
 	for(PageNode& n : *pn) {
 		n.curVal /= sum;
-		n.curVal *= targetScale;
 	}
 }
 
@@ -42,6 +41,14 @@ bool terminateThreshold(vector<PageNode>* pn, double threshold) {
 	return true;
 }
 
+void printSum(vector<PageNode>* pn) {
+	double sum = 0;
+	for(PageNode n : *pn) {
+		sum += n.curVal;
+	}
+	cout << "SUM: " << sum << endl;
+}
+
 void printPageVals(vector<PageNode>* pn) {
 	double sum = 0;
 	for(PageNode n : *pn) {
@@ -53,10 +60,10 @@ void printPageVals(vector<PageNode>* pn) {
 	cout << "SUM: " << sum << endl;
 }
 
-vector<PageNode>* doPageRank2(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
+vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
 	vector<PageNode>* pns = new vector<PageNode>();
 	for(int i = 1; i <= nodeNum; i++) {
-		pns->push_back(PageNode{i, i, 0, 1.f, 1.f});
+		pns->push_back(PageNode{i, i, 0, 1.f / nodeNum, 1.f});
 	}
 	//set outlinks
 	for(int i = 0; i < rp.size(); i++) {
@@ -64,7 +71,6 @@ vector<PageNode>* doPageRank2(std::vector<int> & rp, std::vector<int> & ci, std:
 			pns->at(nodeLabels.at(i) - 1).outLinks = ci.size() + 1 - rp.at(i);
 		} else {
 			pns->at(nodeLabels.at(i) - 1).outLinks = rp.at(i + 1) - rp.at(i);
-			//cout << "outlinks: " << pns->at(nodeLabels.at(i) - 1).outLinks << endl;
 		}
 	}
 	do {
@@ -73,6 +79,7 @@ vector<PageNode>* doPageRank2(std::vector<int> & rp, std::vector<int> & ci, std:
 			n.prevVal = n.curVal;
 			n.curVal = 0;
 		}
+		//gather sum
 		for(int i = 0; i < rp.size(); i++) {
 			int ciIndex = rp.at(i) - 1;
 			int linkNum = pns->at(nodeLabels.at(i) - 1).outLinks;
@@ -81,70 +88,27 @@ vector<PageNode>* doPageRank2(std::vector<int> & rp, std::vector<int> & ci, std:
 				PageNode& fromNode = pns->at(nodeLabels.at(i) - 1);
 				PageNode& toNode =  pns->at(ci.at(ciIndex + j) - 1);
 				//cout << "checking pn fromNode: " << fromNode.number << " to node: " << toNode.number << endl;
-				toNode.curVal += ai.at(ciIndex + j) *
+				toNode.curVal += /*ai.at(ciIndex + j) * */
 					fromNode.prevVal / fromNode.outLinks;
 			}
 		}
 		for(PageNode& n : *pns) {
 			n.curVal = ((1.0 - damp) / nodeNum) + (n.curVal * damp);
 		}
-		scaleValues(pns, (double) 1.f);
-		//printPageVals(pns);
+		//scaleValues(pns);
+		printSum(pns);
 	} while(!terminateThreshold(pns, threshold));
-	//cout << "FINAL" << endl;
-	//printPageVals(pns);
-	scaleValues(pns, 1.f);
-	//cout << "After scale" << endl;
+	scaleValues(pns);
 	printPageVals(pns);
 
 }
 
-vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum, double damp, double threshold) {
-	vector<PageNode>* pns = new vector<PageNode>();
-	for(int i = 1; i <= nodeNum; i++) {
-		pns->push_back(PageNode{i, i, 0, 1.f, 1.f});
+bool tupleOrder(tuple<int, int, int> x, tuple<int, int, int> y) {
+	if(get<0>(x) != get<0>(y)) {
+		return get<0>(x) < get<0>(y);
+	} else {
+		return get<2>(x) > get<2>(y);
 	}
-	//set outlinks
-	for(int i = 0; i < rp.size(); i++) {
-		if(i == (rp.size() - 1)) {
-			pns->at(nodeLabels.at(i) - 1).outLinks = ci.size() + 1 - rp.at(i);
-		} else {
-			pns->at(nodeLabels.at(i) - 1).outLinks = rp.at(i + 1) - rp.at(i);
-			//cout << "outlinks: " << pns->at(nodeLabels.at(i) - 1).outLinks << endl;
-		}
-	}
-	do {
-		cout << "Start" << endl;
-		for(PageNode& n : *pns) {
-			n.prevVal = n.curVal;
-		}
-		for(PageNode& n : *pns) {
-			//cout << "At node: " << n.number << endl;
-			//check for nodes going to this one
-			double inSum = 0;
-			int rowCount = 0;
-			for(int i = 0; i < ci.size(); i++) {
-				//cout << rowCount << endl;
-				if((rowCount+ 1 < rp.size()) && (rp.at(rowCount + 1) - 1 == i)) {
-					rowCount++;
-				}
-				if(ci.at(i) == n.number) {
-					//cout << "insum for "   << n.label << ": " << ai.at(i) * pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks << " link from " << nodeLabels.at(rowCount);
-					//cout << " val: " << pns->at(nodeLabels.at(rowCount) - 1).prevVal << " outlinks: " << pns->at(nodeLabels.at(rowCount) - 1).outLinks << endl;
-					inSum += ai.at(i) * pns->at(nodeLabels.at(rowCount) - 1).prevVal / pns->at(nodeLabels.at(rowCount) - 1).outLinks;
-					//cout << "inSum for " << n.number << " is " << inSum << endl;
-				}
-			}
-			n.curVal = ((1.0 - damp) / nodeNum) + (inSum * damp);
-		}
-		//scaleValues(pns, (double) nodeNum);
-	} while(!terminateThreshold(pns, threshold));
-	//cout << "FINAL" << endl;
-	//printPageVals(pns);
-	scaleValues(pns, 1.f);
-	//cout << "After scale" << endl;
-	printPageVals(pns);
-
 }
 
 void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> & nodeLabels,
@@ -161,7 +125,9 @@ void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> &
 		res.push_back(tuple<int, int, int>(nodeFrom, nodeTo, weight));
 	}
 	//arent they already sorted though?
-	sort(res.begin(), res.end(), [](tuple<int, int, int> x, tuple<int, int, int> y) {return get<0>(x) < get<0>(y);});
+	sort(res.begin(), res.end(), tupleOrder);
+	res.erase(unique(res.begin(), res.end(), [](tuple<int, int, int> x, tuple<int, int, int> y) {return (get<0>(x) == get<0>(y)) && (get<1>(x) == get<1>(y));}), res.end());
+	//sort(res.begin(), res.end(), [](tuple<int, int, int> x, tuple<int, int, int> y) {return get<0>(x) < get<0>(y);});
 	int curNode = 0;
 	for(auto t : res) {
 		//cout << get<0>(t) << " " << get<1>(t) << " " << get<2>(t) << endl;
@@ -239,7 +205,7 @@ int main(int argc, char * argv[], char * env[]) {
 	csrToDimacs(outfile, *rp, *ci, *ai, *nodeLabels, nodes);
 	outfile.close();
 
-	delete(doPageRank2(*rp, *ci, *ai, *nodeLabels, nodes, 0.85, 0.001));
+	delete(doPageRank(*rp, *ci, *ai, *nodeLabels, nodes, 0.85, 0.001));
 
 	return 0;
 }
