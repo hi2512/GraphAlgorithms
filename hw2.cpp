@@ -104,6 +104,14 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 }
 
 bool tupleOrder(tuple<int, int, int> x, tuple<int, int, int> y) {
+	if((get<0>(x) == get<0>(y)) && (get<1>(x) == get<1>(y))) {
+		return get<2>(x) > get<2>(y);
+	} else if(get<0>(x) == get<0>(y)) {
+		return get<1>(x) < get<1>(y);
+	} else {
+		return get<0>(x) < get<0>(y);
+	}
+
 	if(get<0>(x) != get<0>(y)) {
 		return get<0>(x) < get<0>(y);
 	} else {
@@ -198,6 +206,11 @@ int main(int argc, char * argv[], char * env[]) {
 	for(auto i : *nodeLabels) {
 		cout << i << " ";
 	}
+	cout << endl;
+	for(auto i : *res) {
+		cout << get<0>(i) << " " << get<1>(i) << " " << get<2>(i) << endl;
+	}
+
 	cout << endl;
 
 	ofstream outfile;
