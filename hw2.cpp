@@ -164,6 +164,37 @@ void csrToDimacs(ofstream & outfile, std::vector<int> & rp, std::vector<int> & c
 	}
 }
 
+void output_histogram(ofstream& outfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> nodeLabels, int nodeNum) {
+	vector<PageNode>* pns = new vector<PageNode>();
+	for(int i = 1; i <= nodeNum; i++) {
+		pns->push_back(PageNode{i, i, 0, 1.f / nodeNum, 1.f});
+	}
+	//set outlinks
+	int maxLinks = -1;
+	for(int i = 0; i < rp.size(); i++) {
+		if(i == (rp.size() - 1)) {
+			int numLinks = ci.size() + 1 - rp.at(i);
+			pns->at(nodeLabels.at(i) - 1).outLinks = numLinks;
+			if(numLinks > maxLinks) {
+				maxLinks = numLinks;
+			}
+		} else {
+			int numLinks = rp.at(i + 1) - rp.at(i);
+			pns->at(nodeLabels.at(i) - 1).outLinks = numLinks;
+			if(numLinks > maxLinks) {
+				maxLinks = numLinks;
+			}
+		}
+	}
+	vector<int> links(maxLinks + 1, 0);
+	for(int j = 0; j < pns->size(); ++j) {
+		++links[(*pns)[j].outLinks];
+	}
+	for(int k = 0; k < links.size(); ++k) {
+		outfile << k << " " << links[k] << endl;
+	} 
+}
+
 int main(int argc, char * argv[], char * env[]) {
 
 	ifstream dimacfile(argv[1]);
@@ -213,10 +244,17 @@ int main(int argc, char * argv[], char * env[]) {
 
 	cout << endl;
 
-	ofstream outfile;
-	outfile.open("1.dimacs");
-	csrToDimacs(outfile, *rp, *ci, *ai, *nodeLabels, nodes);
-	outfile.close();
+	cout << "Histogram:\n";
+	ofstream histogram_outfile;
+	histogram_outfile.open("histogram.txt");
+	output_histogram(histogram_outfile, *rp, *ci, *ai, *nodeLabels, nodes);
+	histogram_outfile.close();
+	cout << "Done Histogram\n"; 
+
+	// ofstream outfile;
+	// outfile.open("1.dimacs");
+	// csrToDimacs(outfile, *rp, *ci, *ai, *nodeLabels, nodes);
+	// outfile.close();
 
 	delete(doPageRank(*rp, *ci, *ai, *nodeLabels, nodes, 0.85, 0.001));
 
