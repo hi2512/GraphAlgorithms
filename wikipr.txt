@@ -1,0 +1,12 @@
+Node number: 1 Cur Val: 0.0327815
+Node number: 2 Cur Val: 0.383908
+Node number: 3 Cur Val: 0.343403
+Node number: 4 Cur Val: 0.0390871
+Node number: 5 Cur Val: 0.0808857
+Node number: 6 Cur Val: 0.0390871
+Node number: 7 Cur Val: 0.0161695
+Node number: 8 Cur Val: 0.0161695
+Node number: 9 Cur Val: 0.0161695
+Node number: 10 Cur Val: 0.0161695
+Node number: 11 Cur Val: 0.0161695
+SUM: 1

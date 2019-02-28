@@ -30,7 +30,7 @@ void scaleValues(vector<PageNode> * pn) {
 	}
 }
 
-
+//checks to see if change below the threshold has occured
 bool terminateThreshold(vector<PageNode>* pn, double threshold) {
 	for(auto it = pn->begin(); it != pn->end(); ++it) {
 		PageNode cur = *it;
@@ -52,8 +52,6 @@ void printSum(vector<PageNode>* pn) {
 void printPageVals(vector<PageNode>* pn) {
 	double sum = 0;
 	for(PageNode n : *pn) {
-		//cout << "Node number: " << n.number << " Label: " << n.label << " Out Links: " << n.outLinks << endl;
-		//cout << "Cur Val: " << n.curVal << " Prev Val: " << n.prevVal << endl;
 		cout << "Node number: " << n.number << " Cur Val: " << n.curVal << endl;
 		sum += n.curVal;
 	}
@@ -74,7 +72,7 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 		}
 	}
 	do {
-		//cout << "Start" << endl;
+		//set previous value to value of last iteration
 		for(PageNode& n : *pns) {
 			n.prevVal = n.curVal;
 			n.curVal = 0;
@@ -83,11 +81,10 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 		for(int i = 0; i < rp.size(); i++) {
 			int ciIndex = rp.at(i) - 1;
 			int linkNum = pns->at(nodeLabels.at(i) - 1).outLinks;
-			//cout << "i: " << i  << " ciIndex: " << ciIndex << " link num: " << linkNum << endl;
+			//run through all links
 			for(int j = 0; j < linkNum; j++) {
 				PageNode& fromNode = pns->at(nodeLabels.at(i) - 1);
 				PageNode& toNode =  pns->at(ci.at(ciIndex + j) - 1);
-				//cout << "checking pn fromNode: " << fromNode.number << " to node: " << toNode.number << endl;
 				toNode.curVal += /*ai.at(ciIndex + j) * */
 					fromNode.prevVal / fromNode.outLinks;
 			}
@@ -95,8 +92,6 @@ vector<PageNode>* doPageRank(std::vector<int> & rp, std::vector<int> & ci, std::
 		for(PageNode& n : *pns) {
 			n.curVal = ((1.0 - damp) / nodeNum) + (n.curVal * damp);
 		}
-		//scaleValues(pns);
-		//printSum(pns);
 	} while(!terminateThreshold(pns, threshold));
 	scaleValues(pns);
 	printPageVals(pns);
@@ -112,11 +107,6 @@ bool tupleOrder(tuple<int, int, int> x, tuple<int, int, int> y) {
 		return get<0>(x) < get<0>(y);
 	}
 
-	if(get<0>(x) != get<0>(y)) {
-		return get<0>(x) < get<0>(y);
-	} else {
-		return get<2>(x) > get<2>(y);
-	}
 }
 
 void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> & ci, std::vector<int> & ai, std::vector<int> & nodeLabels,
@@ -124,6 +114,7 @@ void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> &
 	string line;
 	char fline[50];
 	int nodeFrom, nodeTo, weight;
+	//read in from file
 	while(getline(dimacfile, line)) {
 		strcpy(fline, line.c_str());
 		strtok(fline, " ");
@@ -134,8 +125,8 @@ void dimacsToCSR(ifstream & dimacfile, std::vector<int> & rp, std::vector<int> &
 	}
 	//arent they already sorted though?
 	sort(res.begin(), res.end(), tupleOrder);
+	//keeps only highest weight duplicates
 	res.erase(unique(res.begin(), res.end(), [](tuple<int, int, int> x, tuple<int, int, int> y) {return (get<0>(x) == get<0>(y)) && (get<1>(x) == get<1>(y));}), res.end());
-	//sort(res.begin(), res.end(), [](tuple<int, int, int> x, tuple<int, int, int> y) {return get<0>(x) < get<0>(y);});
 	int curNode = 0;
 	for(auto t : res) {
 		//cout << get<0>(t) << " " << get<1>(t) << " " << get<2>(t) << endl;
@@ -192,7 +183,7 @@ void output_histogram(ofstream& outfile, std::vector<int> & rp, std::vector<int>
 	}
 	for(int k = 0; k < links.size(); ++k) {
 		outfile << k << " " << links[k] << endl;
-	} 
+	}
 }
 
 int main(int argc, char * argv[], char * env[]) {
@@ -222,39 +213,46 @@ int main(int argc, char * argv[], char * env[]) {
 	vector<int>* nodeLabels = new vector<int>();
 	vector<tuple<int, int, int>>* res = new vector<tuple<int, int, int>>();
 	dimacsToCSR(dimacfile, *rp, *ci, *ai, *nodeLabels, *res);
+	ofstream lfile;
+	lfile.open("labels.txt");
+	/*
 	for(auto i : *rp) {
-		cout << i << " ";
+		lfile << i << " ";
 	}
-	cout << endl;
+	lfile << endl;
 	for(auto i : *ci) {
-		cout << i << " ";
+		lfile << i << " ";
 	}
-	cout << endl;
+	lfile << endl;
 	for(auto i : *ai) {
-		cout << i << " ";
+		lfile << i << " ";
 	}
-	cout << endl;
+	lfile << endl;
 	for(auto i : *nodeLabels) {
-		cout << i << " ";
+		lfile << i << " ";
 	}
-	cout << endl;
+	lfile << endl;
 	for(auto i : *res) {
-		cout << get<0>(i) << " " << get<1>(i) << " " << get<2>(i) << endl;
+		lfile << get<0>(i) << " " << get<1>(i) << " " << get<2>(i) << endl;
 	}
+	lfile << endl;
+	*/
+	for(int i = 0; i < nodeLabels->size(); i++) {
+		lfile << i + 1 << " " << nodeLabels->at(i) << endl;
+	}
+	lfile.close();
 
-	cout << endl;
-
-	cout << "Histogram:\n";
+	//cout << "Histogram:\n";
 	ofstream histogram_outfile;
 	histogram_outfile.open("histogram.txt");
 	output_histogram(histogram_outfile, *rp, *ci, *ai, *nodeLabels, nodes);
 	histogram_outfile.close();
-	cout << "Done Histogram\n"; 
+	//cout << "Done Histogram\n";
 
-	// ofstream outfile;
-	// outfile.open("1.dimacs");
-	// csrToDimacs(outfile, *rp, *ci, *ai, *nodeLabels, nodes);
-	// outfile.close();
+	ofstream outfile;
+	outfile.open("out.dimacs");
+	csrToDimacs(outfile, *rp, *ci, *ai, *nodeLabels, nodes);
+	outfile.close();
 
 	delete(doPageRank(*rp, *ci, *ai, *nodeLabels, nodes, 0.85, 0.001));
 
